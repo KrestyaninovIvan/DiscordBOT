@@ -1,0 +1,41 @@
+@bot.command()
+async def статус(ctx):
+    base.execute('CREATE TABLE IF NOT EXISTS {}(userid INT, count INT)'.format(ctx.message.guild.name.replace(" ", "")))
+    base.commit()
+    warning = cur.execute('SELECT * FROM {} WHERE userid == ?'.format(ctx.message.guild.name.replace(" ", "")),
+                          (ctx.message.author.id,)).fetchone()
+    if warning is None:
+        await ctx.send(f'{ctx.message.author.mention}, чист как слеза')
+    else:
+        await ctx.send(f'{ctx.message.author.mention}, {warning[1]} из трех есть')
+
+
+@bot.event
+async def on_message(message):
+    if {i.lower().translate(str.maketrans('', '', string.punctuation)) for i in
+        message.content.split(' ')}.intersection(json.load(open('words.json'))) != set():
+        await message.delete()
+        await message.channel.send(f'{message.author.mention}, я тебе дам ругаться')
+
+        name = message.guild.name.replace(" ", "")
+        base.execute('CREATE TABLE IF NOT EXISTS {}(userid INT, count INT)'.format(name))
+        base.commit()
+
+        warning = cur.execute('SELECT * FROM {} WHERE userid == ?'.format(name), (message.author.id,)).fetchone()
+
+        if warning == None:
+            base.execute('INSERT INTO {} VALUES(?, ?)'.format(name), (message.author.id, 1))
+            base.commit()
+            await message.channel.send(f'{message.author.mention}, первое предупреждение из трех')
+        elif warning[1] == 1:
+            base.execute('UPDATE {} SET count == ? WHERE userid == ?'.format(name), (2, message.author.id))
+            base.commit()
+            await message.channel.send(f'{message.author.mention}, второе предупреждение из трех')
+        elif warning[1] == 2:
+            base.execute('UPDATE {} SET count == ? WHERE userid == ?'.format(name), (2, message.author.id))
+            base.commit()
+            await message.channel.send(f'{message.author.mention}, три из трех, страйк, ты забанен!')
+            await message.author.ban(reason='Не цензурное выражения')
+
+
+
