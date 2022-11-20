@@ -41,7 +41,7 @@ class Base:
             return self.__cur.execute('SELECT userid, SUM(time) FROM {} WHERE datetime BETWEEN ? AND ? GROUP BY game '
                                       'ORDER BY time DESC LIMIT 3'.format(table), (months_minus, data)).fetchall()
 
-    @property
+
     def execute_check(self, name):
         self.__base.execute('CREATE TABLE IF NOT EXISTS {}(userid INT, count INT)'.format(name))
         self.__base.commit()
@@ -49,7 +49,7 @@ class Base:
     def check(self, name, id):
         return self.__cur.execute('SELECT * FROM {} WHERE userid == ?'.format(name), (id,)).fetchone()
 
-    @property
+
     def base_update(self, name, id):
         warning = self.check(name, id)
         if warning is None:
@@ -59,14 +59,14 @@ class Base:
             self.__base.execute('UPDATE {} SET count == ? WHERE userid == ?'.format(name), (warning[1] + 1, id))
             self.__base.commit()
 
-    @property
+
     def create_table(self, name):
         self.__base.execute(
             'CREATE TABLE IF NOT EXISTS {}(userid INT, game TEXT, datetime DATETIME, time INT)'.format(name))
         self.__base.commit()
 
 
-    @property
+
     def base_insert(self, name, user_id, game, time_start, game_time):
         self.__base.execute('INSERT INTO {} VALUES(?, ?, ?, ?)'.format(name), (user_id, game, time_start, game_time))
         self.__base.commit()
